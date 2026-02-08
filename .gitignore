@@ -10,6 +10,9 @@ dist/
 build/
 *.local
 
+# But include stt-tts-lib built files for deployment
+!stt-tts-lib/dist/
+
 # Environment variables
 .env
 .env.local
