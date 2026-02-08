@@ -1,0 +1,26 @@
+{
+  "name": "omli-ai-assistant",
+  "version": "1.0.0",
+  "description": "Voice-based AI Assistant using NVIDIA Llama and Speech-to-Speech library",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "server": "node server.js",
+    "dev-full": "concurrently \"node server.js\" \"vite\"",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "concurrently": "^8.2.2",
+    "cors": "^2.8.6",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.1",
+    "node-fetch": "^3.3.2",
+    "onnxruntime-web": "^1.20.1",
+    "openai": "^4.70.0",
+    "speech-to-speech": "file:../stt-tts-lib"
+  },
+  "devDependencies": {
+    "vite": "^5.4.11"
+  }
+}
