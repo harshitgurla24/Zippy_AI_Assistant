@@ -1,0 +1,93 @@
+{
+  "name": "speech-to-speech",
+  "version": "0.1.2",
+  "description": "Speech-to-Text, VAD, and Text-to-Speech utilities for TypeScript projects.",
+  "license": "AGPL-3.0-or-later",
+  "author": "Navgurukul",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/navgurukul/stt-tts-lib"
+  },
+  "keywords": [
+    "speech",
+    "tts",
+    "stt",
+    "voice",
+    "ai"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    },
+    "./stt": {
+      "types": "./dist/stt/index.d.ts",
+      "import": "./dist/stt/index.mjs",
+      "require": "./dist/stt/index.cjs"
+    },
+    "./tts": {
+      "types": "./dist/tts/index.d.ts",
+      "import": "./dist/tts/index.mjs",
+      "require": "./dist/tts/index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "clean": "rimraf dist",
+    "lint": "tsc --noEmit",
+    "dev": "vite sample",
+    "preview": "vite preview"
+  },
+  "peerDependencies": {
+    "@onnxruntime/node": ">=1.14.0",
+    "@onnxruntime/web": ">=1.14.0"
+  },
+  "peerDependenciesMeta": {
+    "@onnxruntime/web": {
+      "optional": true
+    },
+    "@onnxruntime/node": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "rimraf": "^5.0.5",
+    "tsup": "^8.0.0",
+    "typescript": "^5.4.0",
+    "vite": "^7.3.0"
+  },
+  "tsup": {
+    "entry": {
+      "index": "src/index.ts",
+      "stt/index": "src/stt/index.ts",
+      "tts/index": "src/tts/index.ts"
+    },
+    "format": [
+      "esm",
+      "cjs"
+    ],
+    "dts": true,
+    "clean": true,
+    "sourcemap": true,
+    "target": "es2020",
+    "outDir": "dist",
+    "treeshake": true,
+    "bundle": true,
+    "splitting": false
+  },
+  "dependencies": {
+    "@realtimex/piper-tts-web": "^1.0.0",
+    "@ricky0123/vad-web": "^0.0.30"
+  }
+}

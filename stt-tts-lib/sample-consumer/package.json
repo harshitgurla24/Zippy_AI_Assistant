@@ -1,0 +1,23 @@
+{
+  "name": "stt-tts-lib-consumer-sample",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sample project demonstrating how to consume stt-tts-lib package",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "copy-ort": "echo 'copy-ort skipped'",
+    "speech-to-speech": "npm install ../speech-to-speech-0.1.1.tgz"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "^5.1.2",
+    "onnxruntime-web": "^1.23.2",
+    "speech-to-speech": "file:../speech-to-speech-0.1.1.tgz"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "vite": "^7.3.0"
+  }
+}
