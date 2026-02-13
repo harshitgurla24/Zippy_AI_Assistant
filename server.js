@@ -111,7 +111,7 @@ app.get('/auth/google/callback',
   passport.authenticate('google', { 
     session: false,
     failureRedirect: process.env.NODE_ENV === 'production' 
-      ? 'https://your-vercel-app.vercel.app' 
+      ? 'https://zippy-ai-assistant-rj46.vercel.app' 
       : 'http://localhost:3000'
   }),
   (req, res) => {
@@ -137,7 +137,7 @@ app.get('/auth/google/callback',
     
     // Redirect to frontend
     res.redirect(process.env.NODE_ENV === 'production' 
-      ? 'https://your-vercel-app.vercel.app' 
+      ? 'https://zippy-ai-assistant-rj46.vercel.app' 
       : 'http://localhost:3000'
     );
   }
