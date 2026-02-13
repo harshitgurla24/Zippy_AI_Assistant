@@ -42,7 +42,7 @@ const userStore = new Map();
 // CORS configuration
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
-    ? ['https://your-vercel-app.vercel.app'] // Update with your Vercel URL
+    ? ['https://zippy-ai-assistant-rj46.vercel.app', 'https://zippy-ai-assistant.vercel.app'] // Your Vercel URLs
     : ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:5174'],
   credentials: true
 }));
