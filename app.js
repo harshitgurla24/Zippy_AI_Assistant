@@ -32,10 +32,6 @@ const profilePage = document.getElementById('profilePage');
 const profileContent = document.getElementById('profileContent');
 const penguinImage = document.getElementById('penguinImage');
 const penguinStatus = document.getElementById('penguinStatus');
-const textModal = document.getElementById('textModal');
-const modalOverlay = document.getElementById('modalOverlay');
-const modalTextInput = document.getElementById('modalTextInput');
-const modalSendBtn = document.getElementById('modalSendBtn');
 
 // Penguin animation functions
 function setPenguinListening() {
@@ -93,35 +89,10 @@ window.toggleSidebar = function() {
   }
 };
 
-// Toggle text modal function
-window.toggleTextModal = function() {
-  const isOpen = textModal.classList.contains('open');
-  if (isOpen) {
-    textModal.classList.remove('open');
-    modalOverlay.classList.remove('open');
-    modalTextInput.value = '';
-  } else {
-    if (!isAuthenticated) {
-      updateStatus('Please sign in to chat', 'error');
-      return;
-    }
-    textModal.classList.add('open');
-    modalOverlay.classList.add('open');
-    setTimeout(() => modalTextInput.focus(), 300);
-  }
-};
-
 // Close sidebar when clicking overlay
 if (sidebarOverlay) {
   sidebarOverlay.addEventListener('click', () => {
     toggleSidebar();
-  });
-}
-
-// Close modal when clicking overlay
-if (modalOverlay) {
-  modalOverlay.addEventListener('click', () => {
-    toggleTextModal();
   });
 }
 
@@ -143,61 +114,14 @@ let silenceTimeout = null;
 let lastSoundTime = 0;
 let transcriptProcessed = false; // Prevent duplicate transcript processing
 
-// Latency tracking
-let latencyMetrics = {
-  sttStart: 0,
-  sttEnd: 0,
-  aiStart: 0,
-  aiEnd: 0,
-  ttsStart: 0,
-  ttsEnd: 0
-};
-
-// Toggle latency panel
-window.toggleLatencyPanel = function() {
-  const panel = document.getElementById('latencyPanel');
-  if (panel) {
-    panel.classList.toggle('hidden');
-  }
-};
-
-// Update latency display
-function updateLatencyDisplay(metric, value) {
-  const element = document.getElementById(metric);
-  if (!element) return;
-  
-  const latency = Math.round(value);
-  element.textContent = `${latency} ms`;
-  
-  // Color coding based on performance
-  element.classList.remove('fast', 'medium', 'slow');
-  if (latency < 500) {
-    element.classList.add('fast');
-  } else if (latency < 1500) {
-    element.classList.add('medium');
-  } else {
-    element.classList.add('slow');
-  }
-}
-
-function updateTotalLatency() {
-  const stt = latencyMetrics.sttEnd - latencyMetrics.sttStart;
-  const ai = latencyMetrics.aiEnd - latencyMetrics.aiStart;
-  const tts = latencyMetrics.ttsEnd - latencyMetrics.ttsStart;
-  const total = stt + ai + tts;
-  
-  if (total > 0) {
-    updateLatencyDisplay('totalLatency', total);
-  }
-}
-
 // Check authentication on load
 // Speak welcome message when app opens
 async function speakWelcomeMessage() {
   const welcomeText = "Hello! I'm Zippy, your AI assistant. Click the microphone button to start talking with me!";
   
   if (ttsReady) {
-    speakResponse(welcomeText);
+    resetTTSQueue();
+    queueSentenceForTTS(welcomeText);
   }
 }
 
@@ -486,12 +410,6 @@ function initSTTNow() {
         return;
       }
       
-      // Track STT end time
-      latencyMetrics.sttEnd = performance.now();
-      const sttLatency = latencyMetrics.sttEnd - latencyMetrics.sttStart;
-      updateLatencyDisplay('sttLatency', sttLatency);
-      console.log(`[Latency] STT: ${Math.round(sttLatency)}ms`);
-      
       if (transcript && transcript.trim()) {
         transcriptProcessed = true; // Mark as processed
         addMessage(transcript, 'user');
@@ -590,13 +508,81 @@ function showThinking() {
   return messageEl;
 }
 
-// Get AI response from server
+// TTS streaming queue management
+let ttsQueue = [];
+let isTTSProcessing = false;
+let firstAudioPlayed = false;
+
+// Queue sentence for TTS synthesis
+async function queueSentenceForTTS(sentence) {
+  if (!sentence || !sentence.trim()) return;
+  
+  console.log('[TTS Queue] Adding sentence:', sentence);
+  ttsQueue.push(sentence);
+  
+  // Start processing if not already running
+  if (!isTTSProcessing) {
+    processTTSQueue();
+  }
+}
+
+// Process TTS queue
+async function processTTSQueue() {
+  if (isTTSProcessing) return;
+  isTTSProcessing = true;
+
+  while (ttsQueue.length > 0) {
+    const sentence = ttsQueue.shift();
+    
+    try {
+      console.log('[TTS Queue] Synthesizing:', sentence);
+      
+      // Track first audio
+      if (!firstAudioPlayed) {
+        updateStatus('Speaking...', 'speaking');
+      }
+
+      const audioData = await tts.synthesize(sentence);
+      
+      if (audioData) {
+        console.log('[TTS Queue] Audio synthesized:', {
+          sampleRate: audioData.sampleRate,
+          samples: audioData.audio?.length ?? 0
+        });
+        
+        // Add audio to player queue (will play automatically)
+        sharedAudioPlayer.addAudioIntoQueue(audioData.audio, audioData.sampleRate);
+
+        // Track first audio
+        if (!firstAudioPlayed) {
+          firstAudioPlayed = true;
+          console.log('[TTS Queue] First audio ready');
+          
+          // Start penguin animation
+          setPenguinSpeaking();
+        }
+      }
+    } catch (error) {
+      console.error('[TTS Queue] Error synthesizing sentence:', error);
+    }
+  }
+
+  isTTSProcessing = false;
+  console.log('[TTS Queue] Queue empty');
+}
+
+// Reset TTS queue (for new conversations)
+function resetTTSQueue() {
+  ttsQueue = [];
+  isTTSProcessing = false;
+  firstAudioPlayed = false;
+  console.log('[TTS Queue] Reset');
+}
+
+// Get AI response from server with streaming
 async function getAIResponse(userMessage) {
   try {
     updateStatus('Zippy is thinking...', 'thinking');
-    
-    // Track AI request start time
-    latencyMetrics.aiStart = performance.now();
     
     conversationHistory.push({
       role: 'user',
@@ -607,7 +593,7 @@ async function getAIResponse(userMessage) {
     // Limit conversation history to last N messages for faster processing
     const recentHistory = conversationHistory.slice(-MAX_HISTORY_MESSAGES);
     
-    console.log('[API] Sending request to server:', `${API_BASE_URL}/api/chat`);
+    console.log('[API] Sending streaming request to server:', `${API_BASE_URL}/api/chat`);
     console.log('[API] Payload messages (limited to last ${MAX_HISTORY_MESSAGES}):', [
       { role: 'system', content: SYSTEM_PROMPT },
       ...recentHistory,
@@ -621,6 +607,7 @@ async function getAIResponse(userMessage) {
       credentials: 'include',
       body: JSON.stringify({
         messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...recentHistory],
+        stream: true
       }),
     });
 
@@ -636,25 +623,86 @@ async function getAIResponse(userMessage) {
       throw new Error(`API error ${response.status}`);
     }
 
-    const data = await response.json();
-    console.log('[API] AI Response received');
+    // Handle streaming response
+    console.log('[Streaming] Starting to read response body');
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let fullText = '';
+    let firstChunkReceived = false;
+    let lastSentenceEnd = 0;
 
-    // Track AI response end time
-    latencyMetrics.aiEnd = performance.now();
-    const aiLatency = latencyMetrics.aiEnd - latencyMetrics.aiStart;
-    updateLatencyDisplay('aiLatency', aiLatency);
-    console.log(`[Latency] AI Response: ${Math.round(aiLatency)}ms`);
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) {
+        console.log('[Streaming] Read complete');
+        break;
+      }
 
-    const aiResponse = data.choices[0].message.content;
-    console.log('[API] AI Response text:', aiResponse);
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || ''; // Keep incomplete line in buffer
+
+      console.log('[Streaming] Received', lines.length, 'lines');
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const data = line.slice(6).trim();
+          if (data === '[DONE]') {
+            console.log('[Streaming] Received [DONE] signal');
+            continue;
+          }
+          if (!data) continue;
+
+          try {
+            const parsed = JSON.parse(data);
+            const content = parsed.choices[0]?.delta?.content || '';
+            
+            console.log('[Streaming] Token received:', content);
+            
+            if (content) {
+              if (!firstChunkReceived) {
+                firstChunkReceived = true;
+                console.log('[Streaming] First token received');
+              }
+              
+              fullText += content;
+              
+              // Check for complete sentences and queue them for TTS
+              const sentenceMatch = fullText.slice(lastSentenceEnd).match(/[^.!?]*[.!?]/);
+              if (sentenceMatch) {
+                const sentence = fullText.slice(lastSentenceEnd, lastSentenceEnd + sentenceMatch[0].length).trim();
+                lastSentenceEnd += sentenceMatch[0].length;
+                
+                if (sentence) {
+                  console.log('[Streaming] Queuing sentence for TTS:', sentence);
+                  queueSentenceForTTS(sentence);
+                }
+              }
+            }
+          } catch (e) {
+            console.error('[Streaming] JSON parse error:', e);
+          }
+        }
+      }
+    }
+
+    // Queue any remaining text
+    if (fullText.slice(lastSentenceEnd).trim()) {
+      const remainingSentence = fullText.slice(lastSentenceEnd).trim();
+      console.log('[Streaming] Queuing remaining text:', remainingSentence);
+      queueSentenceForTTS(remainingSentence);
+    }
+
+    console.log('[API] AI Response complete:', fullText);
 
     conversationHistory.push({
       role: 'assistant',
-      content: aiResponse
+      content: fullText
     });
     saveConversationHistory();
 
-    return aiResponse;
+    return fullText;
   } catch (error) {
     console.error('[API] Error:', error.message);
     
@@ -683,9 +731,6 @@ async function getAIResponse(userMessage) {
 async function speakResponse(text) {
   try {
     updateStatus('Preparing voice...', 'default');
-    
-    // Track TTS start time
-    latencyMetrics.ttsStart = performance.now();
     
     // Stop STT if it's currently listening (don't resume after)
     if (isListening && stt) {
@@ -719,15 +764,6 @@ async function speakResponse(text) {
       samples: result.audio?.length ?? 0,
     });
     
-    // Track TTS end time
-    latencyMetrics.ttsEnd = performance.now();
-    const ttsLatency = latencyMetrics.ttsEnd - latencyMetrics.ttsStart;
-    updateLatencyDisplay('ttsLatency', ttsLatency);
-    console.log(`[Latency] TTS: ${Math.round(ttsLatency)}ms`);
-    
-    // Update total latency
-    updateTotalLatency();
-    
     // Calculate audio duration and wait for it to finish
     const audioDuration = (result.audio.length / result.sampleRate) * 1000; // in ms
     console.log('[TTS] Audio duration:', Math.round(audioDuration), 'ms');
@@ -758,12 +794,16 @@ async function handleUserInput(userMessage) {
   micBtn.disabled = true;
   setPenguinIdle();
   
+  // Reset TTS queue for new conversation turn
+  resetTTSQueue();
+  
   const thinkingMsg = document.getElementById('thinking-message');
   if (thinkingMsg) thinkingMsg.remove();
   
   showThinking();
 
   try {
+    // Streaming will automatically queue sentences for TTS as they arrive
     const aiResponse = await getAIResponse(userMessage);
     
     const thinking = document.getElementById('thinking-message');
@@ -771,8 +811,8 @@ async function handleUserInput(userMessage) {
     
     addMessage(aiResponse, 'assistant');
     
-    // Wait for speech to finish
-    await speakResponse(aiResponse);
+    // No need to call speakResponse - streaming already handled TTS queueing
+    console.log('[Input] Streaming complete, audio playing');
   } catch (error) {
     console.error('[Input] Error:', error);
   } finally {
@@ -804,9 +844,6 @@ micBtn.addEventListener('click', async () => {
       micBtn.innerHTML = '<span class="icon">🎙️</span><span>Listening...</span>';
       updateStatus('Listening... Speak now', 'default');
       setPenguinListening();
-      
-      // Track STT start time
-      latencyMetrics.sttStart = performance.now();
       lastSoundTime = performance.now();
       
       stt.start();
@@ -868,29 +905,16 @@ sidebarClearBtn.addEventListener('click', () => {
   setPenguinIdle();
 });
 
-// Text input handler
-if (modalTextInput && modalSendBtn) {
-  modalSendBtn.addEventListener('click', () => {
-    const text = modalTextInput.value.trim();
-    if (text && isAuthenticated) {
-      console.log('[Input] Text send:', text);
-      addMessage(text, 'user');
-      handleUserInput(text);
-      modalTextInput.value = '';
-      toggleTextModal();
-    } else if (!isAuthenticated) {
-      updateStatus('Please sign in to chat', 'error');
-    }
-  });
-
-  modalTextInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      modalSendBtn.click();
-    }
-  });
-}
-
 // Initialize app
 console.log('App initialized');
 checkAuth();
+
+// Setup audio player callback to control penguin animation
+sharedAudioPlayer.setPlayingChangeCallback((isPlaying) => {
+  console.log('[Audio Player] Playing state changed:', isPlaying);
+  if (!isPlaying) {
+    // Audio finished playing, stop penguin animation
+    setPenguinIdle();
+    updateStatus('Ready to listen', 'success');
+  }
+});

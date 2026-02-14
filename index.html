@@ -71,22 +71,6 @@
       margin-right: auto;
     }
 
-    .text-toggle {
-      background: rgba(255, 255, 255, 0.15);
-      border: 1px solid rgba(255, 255, 255, 0.25);
-      color: #f7f5ef;
-      padding: 10px 16px;
-      border-radius: 999px;
-      font-size: 16px;
-      box-shadow: none;
-      transition: all 0.3s ease;
-    }
-
-    .text-toggle:hover {
-      background: rgba(255, 255, 255, 0.22);
-      transform: scale(1.05);
-    }
-
     .chat-sidebar {
       position: fixed;
       top: 0;
@@ -181,116 +165,6 @@
     }
 
     .sidebar-overlay.open {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    .text-modal {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%) scale(0.95);
-      width: min(90%, 500px);
-      background: #ffffff;
-      border-radius: 20px;
-      box-shadow: 0 25px 60px rgba(15, 27, 43, 0.35);
-      padding: 0;
-      opacity: 0;
-      pointer-events: none;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      z-index: 2000;
-      border: 1px solid rgba(17, 29, 43, 0.12);
-    }
-
-    .text-modal.open {
-      opacity: 1;
-      pointer-events: auto;
-      transform: translate(-50%, -50%) scale(1);
-    }
-
-    .text-modal-header {
-      background: linear-gradient(120deg, #0f1b2b 0%, #25364b 60%, #1a2433 100%);
-      color: #f7f5ef;
-      padding: 20px 24px;
-      border-radius: 20px 20px 0 0;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .text-modal-title {
-      font-size: 18px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-    }
-
-    .text-modal-close {
-      background: rgba(255, 255, 255, 0.12);
-      color: #f7f5ef;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      padding: 8px 14px;
-      border-radius: 999px;
-      font-size: 14px;
-      box-shadow: none;
-    }
-
-    .text-modal-body {
-      padding: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .text-modal-input {
-      width: 100%;
-      border: 2px solid rgba(17, 29, 43, 0.12);
-      border-radius: 14px;
-      padding: 14px 16px;
-      font-size: 15px;
-      color: #1a2433;
-      background: #f7f5ef;
-      outline: none;
-      transition: all 0.2s ease;
-      font-family: inherit;
-      resize: vertical;
-      min-height: 120px;
-    }
-
-    .text-modal-input:focus {
-      border-color: #2aa7a1;
-      background: #ffffff;
-    }
-
-    .text-modal-send {
-      background: linear-gradient(120deg, #2aa7a1 0%, #59d0c7 100%);
-      color: #f7f5ef;
-      padding: 14px 24px;
-      border-radius: 999px;
-      font-size: 15px;
-      font-weight: 700;
-      box-shadow: 0 8px 20px rgba(42, 167, 161, 0.25);
-      width: 100%;
-    }
-
-    .text-modal-send:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 12px 28px rgba(42, 167, 161, 0.35);
-    }
-
-    .modal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(15, 27, 43, 0.7);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s ease;
-      z-index: 1900;
-    }
-
-    .modal-overlay.open {
       opacity: 1;
       pointer-events: auto;
     }
@@ -423,94 +297,6 @@
       border-color: #ff8a3d;
       background: linear-gradient(120deg, #fff7eb 0%, #ffe6c7 100%);
       color: #c55a1a;
-    }
-
-    .latency-panel {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
-      border-radius: 16px;
-      padding: 16px 20px;
-      box-shadow: 0 15px 40px rgba(15, 27, 43, 0.2);
-      border: 1px solid rgba(17, 29, 43, 0.1);
-      min-width: 240px;
-      z-index: 100;
-      transition: all 0.3s ease;
-    }
-
-    .latency-panel.hidden {
-      transform: translateY(120%);
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    .latency-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 12px;
-      padding-bottom: 10px;
-      border-bottom: 2px solid rgba(17, 29, 43, 0.08);
-    }
-
-    .latency-title {
-      font-size: 14px;
-      font-weight: 700;
-      color: #1a2433;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .latency-toggle {
-      background: transparent;
-      border: none;
-      color: #5b6b7a;
-      font-size: 16px;
-      padding: 4px;
-      cursor: pointer;
-      box-shadow: none;
-    }
-
-    .latency-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 0;
-      font-size: 13px;
-    }
-
-    .latency-label {
-      color: #5b6b7a;
-      font-weight: 600;
-    }
-
-    .latency-value {
-      color: #1a2433;
-      font-weight: 700;
-      font-family: 'Courier New', monospace;
-    }
-
-    .latency-value.fast {
-      color: #187b57;
-    }
-
-    .latency-value.medium {
-      color: #c55a1a;
-    }
-
-    .latency-value.slow {
-      color: #b42c2c;
-    }
-
-    .latency-total {
-      margin-top: 8px;
-      padding-top: 12px;
-      border-top: 2px solid rgba(17, 29, 43, 0.08);
-      font-size: 14px;
-      font-weight: 700;
     }
 
     .profile-page {
@@ -859,8 +645,7 @@
         left: -100%;
       }
 
-      .sidebar-toggle span.toggle-text,
-      .text-toggle span.toggle-text {
+      .sidebar-toggle span.toggle-text {
         display: none;
       }
     }
@@ -902,42 +687,6 @@
         min-width: 110px;
       }
 
-      .text-modal {
-        width: 95%;
-      }
-
-      .text-modal-header {
-        padding: 16px 18px;
-      }
-
-      .text-modal-title {
-        font-size: 16px;
-      }
-
-      .text-modal-body {
-        padding: 18px;
-      }
-
-      .text-modal-input {
-        min-height: 100px;
-        font-size: 14px;
-      }
-
-      .latency-panel {
-        bottom: 10px;
-        right: 10px;
-        min-width: 200px;
-        padding: 12px 16px;
-      }
-
-      .latency-title {
-        font-size: 12px;
-      }
-
-      .latency-item {
-        font-size: 11px;
-        padding: 6px 0;
-      }
     }
 
     /* Auth Styles */
@@ -1120,19 +869,6 @@
     </div>
   </div>
 
-  <!-- Text Input Modal -->
-  <div class="modal-overlay" id="modalOverlay"></div>
-  <div class="text-modal" id="textModal">
-    <div class="text-modal-header">
-      <div class="text-modal-title">✍️ Type Your Message</div>
-      <button class="text-modal-close" onclick="toggleTextModal()">✕</button>
-    </div>
-    <div class="text-modal-body">
-      <textarea class="text-modal-input" id="modalTextInput" placeholder="Type your message for Zippy here..."></textarea>
-      <button class="text-modal-send" id="modalSendBtn">Send Message</button>
-    </div>
-  </div>
-
   <div class="container">
     <div class="header">
       <div class="header-buttons">
@@ -1140,14 +876,10 @@
           <span class="icon">💬</span>
           <span class="toggle-text">Chat</span>
         </button>
-        <button class="text-toggle" onclick="toggleTextModal()">
-          <span class="icon">✍️</span>
-          <span class="toggle-text">Text</span>
-        </button>
       </div>
       <div>
         <h1>Zippy </h1>
-        <p>Talk, type, or play. Your buddy listens and answers fast.</p>
+        <p>Your voice buddy listens and answers fast.</p>
       </div>
       <div id="authSection" class="auth-slot">
         <!-- Auth UI will be injected here -->
@@ -1186,32 +918,5 @@
   </div>
 
   <script type="module" src="/app.js"></script>
-
-  <!-- Latency Panel -->
-  <div class="latency-panel" id="latencyPanel">
-    <div class="latency-header">
-      <div class="latency-title">
-        <span>⚡</span>
-        <span>Latency</span>
-      </div>
-      <button class="latency-toggle" onclick="toggleLatencyPanel()" title="Hide panel">✕</button>
-    </div>
-    <div class="latency-item">
-      <span class="latency-label">STT:</span>
-      <span class="latency-value" id="sttLatency">-- ms</span>
-    </div>
-    <div class="latency-item">
-      <span class="latency-label">AI Response:</span>
-      <span class="latency-value" id="aiLatency">-- ms</span>
-    </div>
-    <div class="latency-item">
-      <span class="latency-label">TTS:</span>
-      <span class="latency-value" id="ttsLatency">-- ms</span>
-    </div>
-    <div class="latency-item latency-total">
-      <span class="latency-label">Total:</span>
-      <span class="latency-value" id="totalLatency">-- ms</span>
-    </div>
-  </div>
 </body>
 </html>

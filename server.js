@@ -163,16 +163,16 @@ app.get('/api/user', verifyToken, (req, res) => {
   });
 });
 
-// Chat endpoint (protected) - Proxy to NVIDIA API
+// Chat endpoint (protected) - Proxy to NVIDIA API with streaming
 app.post('/api/chat', verifyToken, async (req, res) => {
   try {
-    const { messages } = req.body;
+    const { messages, stream = true } = req.body;
 
-    console.log('Received request with messages:', messages.length);
+    console.log('Received request with messages:', messages.length, 'stream:', stream);
 
-    // Set abort timeout (8 seconds max - aggressive)
+    // Set abort timeout
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
+    const timeout = setTimeout(() => controller.abort(), 10000);
 
     const response = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
       method: 'POST',
@@ -183,10 +183,11 @@ app.post('/api/chat', verifyToken, async (req, res) => {
       body: JSON.stringify({
         model: 'meta/llama-3.1-8b-instruct',
         messages: messages,
-        temperature: 0.1,   // Very low temp = fastest, most deterministic
-        top_p: 0.3,         // Aggressive reduction for fastest inference
-        max_tokens: 50,     // Aggressive reduction for 1-sentence responses only
-        frequency_penalty: 0.8,  // Higher penalty to reduce repetition faster
+        temperature: 0.1,
+        top_p: 0.3,
+        max_tokens: 50,
+        frequency_penalty: 0.8,
+        stream: stream  // Enable streaming
       }),
       signal: controller.signal
     });
@@ -199,10 +200,32 @@ app.post('/api/chat', verifyToken, async (req, res) => {
       return res.status(response.status).json({ error: errorText });
     }
 
-    const data = await response.json();
-    console.log('NVIDIA API response received');
+    // If streaming requested, forward the stream
+    if (stream) {
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
 
-    res.json(data);
+      // Stream the response - Node.js compatible way
+      try {
+        // response.body is a ReadableStream in Node.js
+        for await (const chunk of response.body) {
+          res.write(chunk);
+        }
+        res.end();
+      } catch (error) {
+        console.error('Streaming error:', error);
+        if (!res.headersSent) {
+          res.status(500).json({ error: 'Streaming failed' });
+        } else {
+          res.end();
+        }
+      }
+    } else {
+      // Non-streaming fallback
+      const data = await response.json();
+      res.json(data);
+    }
   } catch (error) {
     console.error('Proxy error:', error);
     const status = error.name === 'AbortError' ? 504 : 500;
