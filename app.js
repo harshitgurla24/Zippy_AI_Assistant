@@ -56,10 +56,14 @@ function setPenguinSpeaking() {
     penguinStatus.classList.remove('listening');
     penguinStatus.classList.add('speaking');
     penguinStatus.textContent = '🗣️ Speaking...';
-    // Play video when speaking
+    // Play video when speaking - don't reset currentTime, let it loop naturally
     if (penguinImage.tagName === 'VIDEO') {
-      penguinImage.currentTime = 0;
-      penguinImage.play().catch(err => console.log('Video play error:', err));
+      penguinImage.loop = true; // Ensure loop is enabled
+      penguinImage.muted = true; // Ensure muted
+      if (penguinImage.paused) {
+        penguinImage.play().catch(err => console.log('Video play error:', err));
+      }
+      console.log('[Video] Playing - will loop continuously');
     }
   }
 }
@@ -119,10 +123,18 @@ let transcriptProcessed = false; // Prevent duplicate transcript processing
 async function speakWelcomeMessage() {
   const welcomeText = "Hello! I'm Zippy, your AI assistant. Click the microphone button to start talking with me!";
   
-  if (ttsReady) {
-    resetTTSQueue();
-    queueSentenceForTTS(welcomeText);
+  // Wait for TTS to be fully ready
+  if (!ttsReady) {
+    console.log('[Welcome] TTS not ready yet, waiting...');
+    return;
   }
+  
+  // Small delay to ensure everything is initialized
+  await new Promise(resolve => setTimeout(resolve, 300));
+  
+  console.log('[Welcome] Speaking welcome message');
+  resetTTSQueue();
+  queueSentenceForTTS(welcomeText);
 }
 
 async function checkAuth() {
@@ -141,7 +153,9 @@ async function checkAuth() {
       // Initialize TTS first, then speak welcome message
       await initTTS();
       initSTTNow();
-      speakWelcomeMessage();
+      
+      // Speak welcome message after TTS is fully ready
+      await speakWelcomeMessage();
     } else {
       isAuthenticated = false;
       renderAuthUI();
@@ -905,16 +919,28 @@ sidebarClearBtn.addEventListener('click', () => {
   setPenguinIdle();
 });
 
-// Initialize app
-console.log('App initialized');
-checkAuth();
-
-// Setup audio player callback to control penguin animation
+// Setup audio player callback BEFORE any audio plays
 sharedAudioPlayer.setPlayingChangeCallback((isPlaying) => {
   console.log('[Audio Player] Playing state changed:', isPlaying);
   if (!isPlaying) {
-    // Audio finished playing, stop penguin animation
-    setPenguinIdle();
-    updateStatus('Ready to listen', 'success');
+    // Audio finished playing completely, stop penguin animation
+    console.log('[Audio Player] All audio finished, stopping video');
+    // Small delay to ensure queue is actually empty
+    setTimeout(() => {
+      if (!sharedAudioPlayer.isAudioPlaying() && sharedAudioPlayer.getQueueSize() === 0) {
+        setPenguinIdle();
+        updateStatus('Ready to listen', 'success');
+      }
+    }, 100);
+  } else {
+    // Audio is playing, make sure video is playing too
+    console.log('[Audio Player] Audio playing, ensuring video plays');
+    if (penguinImage?.classList.contains('speaking') && penguinImage.tagName === 'VIDEO' && penguinImage.paused) {
+      penguinImage.play().catch(err => console.log('Video play error:', err));
+    }
   }
 });
+
+// Initialize app
+console.log('App initialized');
+checkAuth();
