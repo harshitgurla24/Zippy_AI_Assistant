@@ -119,24 +119,6 @@ let lastSoundTime = 0;
 let transcriptProcessed = false; // Prevent duplicate transcript processing
 
 // Check authentication on load
-// Speak welcome message when app opens
-async function speakWelcomeMessage() {
-  const welcomeText = "Hello! I'm Zippy, your AI assistant. Click the microphone button to start talking with me!";
-  
-  // Wait for TTS to be fully ready
-  if (!ttsReady) {
-    console.log('[Welcome] TTS not ready yet, waiting...');
-    return;
-  }
-  
-  // Small delay to ensure everything is initialized
-  await new Promise(resolve => setTimeout(resolve, 300));
-  
-  console.log('[Welcome] Speaking welcome message');
-  resetTTSQueue();
-  queueSentenceForTTS(welcomeText);
-}
-
 async function checkAuth() {
   try {
     const response = await fetch(`${API_BASE_URL}/api/user`, {
@@ -150,12 +132,9 @@ async function checkAuth() {
       loadConversationHistory();
       updateStatus('Ready! Click microphone to start', 'default');
       
-      // Initialize TTS first, then speak welcome message
+      // Initialize TTS and STT
       await initTTS();
       initSTTNow();
-      
-      // Speak welcome message after TTS is fully ready
-      await speakWelcomeMessage();
     } else {
       isAuthenticated = false;
       renderAuthUI();
